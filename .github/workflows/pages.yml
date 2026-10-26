@@ -1,0 +1,45 @@
+# 把仓库根目录的 index.html 发布到 GitHub Pages（2026-10-26）
+#
+# 只放隐私政策这一个页面，所以不需要构建：直接上传整个仓库根目录。
+# `configure-pages` 带 `enablement: true` —— 首次运行会尝试自动为仓库启用 Pages，
+# 这样不需要去 Settings 里手点（需要 pages: write + 仓库 admin 身份，push 的 Actions 默认满足）。
+name: Deploy privacy policy to Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # 仓库根目录就是站点根目录（index.html 在根上）
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
